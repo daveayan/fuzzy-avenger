@@ -5,7 +5,7 @@ import org.junit.Test
 
 import akka.actor.ActorSystem
 
-class Main {
+class OneTest {
 	static def system_name = "com-daveayan-fuzzyavenger-one-Main"
 	static def system
 	

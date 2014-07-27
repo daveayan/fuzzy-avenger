@@ -9,7 +9,7 @@ import akka.actor.Props
 import akka.actor.UntypedActor
 import akka.japi.Creator
 
-class Main {
+class ThreeTest {
 	static def system_name = "com-daveayan-fuzzyavenger-three-Main"
 	static def system
 	
