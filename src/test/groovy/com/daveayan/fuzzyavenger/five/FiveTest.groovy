@@ -1,139 +1,119 @@
 package com.daveayan.fuzzyavenger.five
 
-import org.junit.BeforeClass
 import org.junit.Test
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.UntypedActor
-import akka.japi.Creator
+import akka.actor.UntypedActorFactory
 import akka.routing.RoundRobinRouter
 
 class FiveTest {
-	
 	@Test public void listening_to_system_shutdown_command() {
-		Runner r = new Runner()
-		r.runem()
+		ParallelRunner at = new ParallelRunner()
+		at.runme()
 	}
 }
 
-class Runner {
-	def system_name = "com-daveayan-fuzzyavenger-five-Main"
-	def system
-	def runem() {
-		println "BEGIN - ${this}"
-		system = ActorSystem.create(system_name);
+class ParallelRunner {
+	def runme() {
+		def ids = ["A", "B", "C", "D", "E", "F"]
 		def nrOfWorkers = 4
 		
-		def AL0_SystemShutdowner = system.actorOf(new Props(Actor_Level0_SystemShutdowner.class), "shutdownCommandListener-1")
-		def masterActor = system.actorOf(Props.create(new MasterActorCreator(AL0_SystemShutdowner, nrOfWorkers)), "masterActor")
+		ActorSystem system = ActorSystem.create("fuzzy-avenger-" + System.currentTimeMillis());
 		
-		masterActor.tell(new Main_AL1_MessageCommand(), ActorRef.noSender())
-		AL0_SystemShutdowner.tell(new Object(), ActorRef.noSender())
-		
-		println "END - ${this}"
+		final ActorRef shutdownCommandListener = system.actorOf(new Props(ActorLevel0_SystemShutdowner.class), "shutdownCommandListener");
+
+		ActorRef actorLevel1 = system.actorOf(new Props(new UntypedActorFactory() {
+			private static final long serialVersionUID = 1L;
+			public UntypedActor create() {
+				return new ActorLevel1(ids, nrOfWorkers, shutdownCommandListener);
+			}
+		}), "ActorLevel1");
+		actorLevel1.tell(new Message_Runner_to_AL1(), ActorRef.noSender());
+		System.out.println("${this} - OUT OF HERE");
 	}
 }
 
-class MasterActorCreator implements Creator<MasterActor> {
-	def AL0_SystemShutdowner, nrOfWorkers
-	public MasterActorCreator(AL0_SystemShutdowner, nrOfWorkers) {
-		this.AL0_SystemShutdowner = AL0_SystemShutdowner
+class ActorLevel0_SystemShutdowner extends UntypedActor {
+	public void onReceive(Object message) {
+		if (message instanceof Message_AL1_to_AL0) {
+			println "${this} - I will print the final results when I have them. Shutting down for now."
+			getContext().system().shutdown();
+		} else {
+			unhandled(message);
+		}
+	}
+}
+
+class ActorLevel1 extends UntypedActor {
+	private final ActorRef shutdownCommandListener;
+	private final ActorRef routerActor;
+	private final List<String> ids
+	private final nrOfWorkers
+	private int numberOfResultsGot = 0
+		
+	public ActorLevel1(List<String> ids, int nrOfWorkers, ActorRef shutdownCommandListener) {
+		this.shutdownCommandListener = shutdownCommandListener;
+		this.ids = ids;
 		this.nrOfWorkers = nrOfWorkers
+		routerActor = this.getContext().actorOf(
+			new Props(ActorLevel2.class)
+			.withRouter(new RoundRobinRouter(nrOfWorkers)), "roundRobinRouterActor");
 	}
 	
-	public MasterActor create(){
-		return new MasterActor(AL0_SystemShutdowner, nrOfWorkers);
-	}
-}
-
-class MasterActor extends UntypedActor {
-	def AL0_SystemShutdowner, nrOfWorkers, workerRouter
-	public MasterActor(AL0_SystemShutdowner, nrOfWorkers) {
-		this.AL0_SystemShutdowner = AL0_SystemShutdowner
-		this.nrOfWorkers = nrOfWorkers
-		println AL0_SystemShutdowner
-		def a = new Props(ActorLevel2.class).withRouter(new RoundRobinRouter(nrOfWorkers))
-		println a
-		this.workerRouter = this.getContext().actorOf(a, "WR");
-		println workerRouter
-	}
 	public void onReceive(Object message) {
-		println "BEGIN - ${this} - I have this message ${message}"
-		println "END - ${this} - I have this message ${message}"
-		getContext().stop(getSelf())
+		println "${this} - Got Message ${message}"
+		if(message instanceof Message_AL2_to_AL1) {
+			println "${this} - Got results from ${message.id}"
+			numberOfResultsGot++
+			if(numberOfResultsGot == ids.size()) {
+				println "${this} - All ID's processed"
+				shutdownCommandListener.tell(new Message_AL1_to_AL0(), getSelf())
+				getContext().stop(getSelf());
+			}
+		}
+		if(message instanceof Message_Runner_to_AL1) {
+			for (int i = 0; i < ids.size(); i++) {
+				routerActor.tell(new Message_AL1_to_AL2(ids.get(i)), getSelf());
+			}
+		}
+		println "${this} - Done Processing Message ${message}"
 	}
 }
 
 class ActorLevel2 extends UntypedActor {
 	public void onReceive(Object message) {
-		println "BEGIN - ${this} - I have this message --- ${message}"
-		println "END - ${this} - I have this message ${message}"
+		println "${this} - Got Message ${message}"
+		Message_AL1_to_AL2 m = (Message_AL1_to_AL2) message
+		println "${this} - Making Service Call, will run for 5 seconds - ${m.id}"
+		
+		Thread.sleep(5*1000)
+		
+		println "${this} - Done with Service Call - ${m.id}"
+		getSender().tell(new Message_AL2_to_AL1(m.id), getSelf());
+		println "${this} - Sent Message of Completion - ${m.id}"
 	}
 }
 
-class ActorLevel1 extends UntypedActor {
-	def AL0_SystemShutdowner
-	def router, nrOfWorkers, workCompleted = 0
-	
-	public ActorLevel1(AL0_SystemShutdowner, nrOfWorkers) {
-		this.AL0_SystemShutdowner = AL0_SystemShutdowner
-		this.nrOfWorkers = nrOfWorkers
-		this.router = this.getContext().actorOf(new Props(Actor_Level2.class).withRouter(new RoundRobinRouter(nrOfWorkers)), "AL2-Router");
-	}
-	
-	public void onReceive(Object message) {
-		println "BEGIN - ${this} - I have this message --- ${message}"
-		if (message instanceof Main_AL1_MessageCommand) {
-			for (i in 0 .. nrOfWorkers * 2.2) {
-				router.tell(new AL1_Al2_MessageCommand(), getSelf());
-			}
-		} else if (message instanceof AL2_AL1_MessageResult) {
-			workCompleted ++
-			if (workCompleted == nrOfWorkers * 2.2) {
-				AL0_SystemShutdowner.tell(new Object(), ActorRef.noSender())
-				getContext().stop(getSelf())
-			}
-		}
-		println "END - ${this} - I have this message ${message}"
-	}
-	
+class Message_AL1_to_AL0 {
 }
 
-class ActorLevel1Creator implements Creator<ActorLevel1> {
-	def AL0_SystemShutdowner, nrOfWorkers
-	public ActorLevel1 create(){
-		return new ActorLevel1(AL0_SystemShutdowner, nrOfWorkers);
-	}
-	
-	public ActorLevel1Creator(AL0_SystemShutdowner, nrOfWorkers) {
-		this.AL0_SystemShutdowner = AL0_SystemShutdowner
-		this.nrOfWorkers = nrOfWorkers
-	}
-	
-	public ActorLevel1Creator() {
-		this.nrOfWorkers = 3
+class Message_AL1_to_AL2 {
+	public String id
+	public Message_AL1_to_AL2(String id) {
+		this.id = id
 	}
 }
 
-class Actor_Level0_SystemShutdowner extends UntypedActor {
-	public void onReceive(Object message) {
-		println "BEGIN - ${this} - I have this message ${message}"
-		getContext().stop(getSelf())
-		getContext().system().shutdown()
-		println "END - ${this} - I have this message ${message}"
+class Message_AL2_to_AL1 {
+	public String id
+	public Message_AL2_to_AL1(String id) {
+		this.id = id
 	}
 }
 
-class Main_AL1_MessageCommand {
-
-}
-
-class AL1_Al2_MessageCommand {
-	
-}
-
-class AL2_AL1_MessageResult {
+class Message_Runner_to_AL1 {
 
 }
