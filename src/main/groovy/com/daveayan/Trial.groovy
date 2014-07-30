@@ -27,6 +27,6 @@ class LongRunningFunction implements Function<String, String> {
 		println "${this} - Making Service Call, will run for 5 seconds - ${arg0}"
 		Thread.sleep(5*1000)
 		println "${this} - Done with Service Call - ${arg0}"
-		return null;
+		return "${arg0}%";
 	}
 }
