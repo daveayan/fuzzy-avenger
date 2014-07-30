@@ -10,8 +10,8 @@ class Trial {
 		aep.initialize()
 		Lists l = Lists.initialize(aep)
 		
-		l.apply(["1", "2", "3"], [], new LongRunningFunction(), 4)
-		l.apply(["A", "B", "C", "D"], [], new LongRunningFunction(), 3)
+//		l.apply(["1", "2", "3"], [], new LongRunningFunction(), 4)
+		l.apply(["A", "B", "C", "D", "E", "F", "G"], [], new LongRunningFunction(), 3)
 		Thread.sleep(30*1000)
 		l.shutdown()
 		
