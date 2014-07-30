@@ -1,4 +1,4 @@
-package com.daveayan.fuzzyavenger.impl
+package com.daveayan.fuzzyavenger.providers.akka
 
 import akka.actor.ActorRef
 import akka.actor.Props
@@ -8,13 +8,12 @@ import akka.routing.RoundRobinRouter
 class ActorLevel1 extends UntypedActor {
 	private final ActorRef shutdownCommandListener;
 	private final ActorRef routerActor;
-	private final List<String> ids
+	private final List<Object> data
 	private final nrOfWorkers
 	private int numberOfResultsGot = 0
 		
-	public ActorLevel1(List<String> ids, int nrOfWorkers, ActorRef shutdownCommandListener) {
-		this.shutdownCommandListener = shutdownCommandListener;
-		this.ids = ids;
+	public ActorLevel1(List<Object> data, int nrOfWorkers) {
+		this.data = data;
 		this.nrOfWorkers = nrOfWorkers
 		routerActor = this.getContext().actorOf(
 			new Props(ActorLevel2.class)
@@ -24,17 +23,16 @@ class ActorLevel1 extends UntypedActor {
 	public void onReceive(Object message) {
 		println "${this} - Got Message ${message}"
 		if(message instanceof Message_AL2_to_AL1) {
-			println "${this} - Got results from ${message.id}"
+			println "${this} - Got results from ${message.data}"
 			numberOfResultsGot++
-			if(numberOfResultsGot == ids.size()) {
-				println "${this} - All ID's processed"
-				shutdownCommandListener.tell(new Message_AL1_to_AL0(), getSelf())
+			if(numberOfResultsGot == data.size()) {
+				println "${this} - All data elements processed"
 				getContext().stop(getSelf());
 			}
 		}
 		if(message instanceof Message_Runner_to_AL1) {
-			for (int i = 0; i < ids.size(); i++) {
-				routerActor.tell(new Message_AL1_to_AL2(ids.get(i)), getSelf());
+			for (int i = 0; i < data.size(); i++) {
+				routerActor.tell(new Message_AL1_to_AL2(data.get(i), message.functionToApply), getSelf());
 			}
 		}
 		println "${this} - Done Processing Message ${message}"
