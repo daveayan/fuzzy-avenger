@@ -7,7 +7,7 @@ import akka.actor.UntypedActor
 import akka.actor.UntypedActorFactory
 
 import com.daveayan.fuzzyavenger.ExecutionProvider
-import com.google.common.base.Function
+import com.daveayan.fuzzyavenger.Function
 
 class AkkaExecutionProvider implements ExecutionProvider {
 	def system, shutdownCommandListener
@@ -23,7 +23,7 @@ class AkkaExecutionProvider implements ExecutionProvider {
 		shutdownCommandListener = system.actorOf(new Props(ActorLevel0_SystemShutdowner.class), "shutdownCommandListener");
 	}
 	
-	public void run(List<Object> data, Function<?, ?> functionToApply, int numberOfWorkers) {
+	public void run(List<Object> data, List<Object> parameters, Function<?, ?> functionToApply, int numberOfWorkers) {
 		ActorRef actorLevel1 = system.actorOf(new Props(new UntypedActorFactory() {
 			private static final long serialVersionUID = 1L;
 			public UntypedActor create() {
@@ -31,7 +31,7 @@ class AkkaExecutionProvider implements ExecutionProvider {
 			}
 		}), "ActorLevel1-" + System.currentTimeMillis());
 		
-		actorLevel1.tell(new Message_Runner_to_AL1(functionToApply), ActorRef.noSender());	
+		actorLevel1.tell(new Message_Runner_to_AL1(parameters, functionToApply), ActorRef.noSender());	
 		System.out.println("${this} - OUT OF HERE");
 	}
 	

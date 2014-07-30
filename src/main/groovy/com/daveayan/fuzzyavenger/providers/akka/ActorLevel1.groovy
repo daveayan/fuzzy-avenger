@@ -38,7 +38,7 @@ class ActorLevel1 extends UntypedActor {
 		}
 		if(message instanceof Message_Runner_to_AL1) {
 			for (int i = 0; i < data.size(); i++) {
-				routerActor.tell(new Message_AL1_to_AL2(i, data.get(i), message.functionToApply), getSelf());
+				routerActor.tell(new Message_AL1_to_AL2(i, data.get(i), message.functionToApply, message.parameters), getSelf());
 			}
 		}
 		println "${this} - Done Processing Message ${message}"
