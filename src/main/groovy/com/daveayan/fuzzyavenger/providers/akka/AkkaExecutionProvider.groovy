@@ -41,7 +41,7 @@ class AkkaExecutionProvider implements ExecutionProvider {
 		List<Object> results = (List<Object>) Await.result(future, timeout.duration());
 		
 //		actorLevel1.tell(new Message_Runner_to_AL1(parameters, functionToApply), ActorRef.noSender());	
-		System.out.println("${this} - OUT OF HERE");
+//		System.out.println("${this} - OUT OF HERE");
 		return results
 	}
 	

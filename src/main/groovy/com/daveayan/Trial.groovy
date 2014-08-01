@@ -16,14 +16,15 @@ class Trial {
 //		println "HEHE - ${results}"
 //		results = l.apply(["A", "B", "C", "D", "E", "F", "G"], [], new LongRunningFunction(), 3, 60)
 //		println "HEHE - ${results}"
-		results = l.apply(["A", "B", "C", "D", "E", "F", "G"], [], new LongRunningFunction(), 7, 60)
+		starttime = System.currentTimeMillis()
+		results = l.apply(["A", "B", "C", "D", "E", "F", "G"], [], new LongRunningFunction(), 1, 60)
+		endtime = System.currentTimeMillis()
 //		println "HEHE - ${results}"
 //		results = l.apply(["A"], [], new LongRunningFunction(), 3, 15)
 		println "HEHE - ${results}"
 		l.shutdown()
 		
-		endtime = System.currentTimeMillis()
-		println "\nTOOK ${endtime - starttime}ms = ${(endtime - starttime)/1000} s"
+		println "TOOK ${endtime - starttime}ms = ${(endtime - starttime)/1000} s\n"
 		
 		starttime = System.currentTimeMillis()
 		
@@ -37,7 +38,7 @@ class Trial {
 //		println "HAHA - ${results}"
 		
 		endtime = System.currentTimeMillis()
-		println "\nTOOK ${endtime - starttime}ms = ${(endtime - starttime)/1000} s"
+		println "TOOK ${endtime - starttime}ms = ${(endtime - starttime)/1000} s\n"
 		
 		
 		
@@ -64,9 +65,9 @@ class Trial {
 class LongRunningFunction implements Function<String, String> {
 	@Override
 	public String apply(String arg0, List<Object> parameters) {
-		println "${this} - Making Service Call, will run for 1 seconds - ${arg0}"
+//		println "${this} - Making Service Call, will run for 1 seconds - ${arg0}"
 //		Thread.sleep(1*1000)
-		println "${this} - Done with Service Call - ${arg0}"
+//		println "${this} - Done with Service Call - ${arg0}"
 		return "${arg0}%";
 	}
 }

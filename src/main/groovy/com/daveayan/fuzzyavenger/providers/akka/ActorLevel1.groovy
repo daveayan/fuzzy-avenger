@@ -26,15 +26,13 @@ class ActorLevel1 extends UntypedActor {
 	}
 	
 	public void onReceive(Object message) {
-		ActorRef s1 = getSender()
-		println s1
-		println "${this} - Got Message ${message}"
+//		println "${this} - Got Message ${message}"
 		if(message instanceof Message_AL2_to_AL1) {
-			println "${this} - Got results from ${message}"
+//			println "${this} - Got results from ${message}"
 			numberOfResultsGot++
 			newValues.set(message.sequenceNumber, message.newValue)
 			if(numberOfResultsGot == data.size()) {
-				println "${this} - All data elements processed"
+//				println "${this} - All data elements processed"
 				promiseActor.tell(newValues, getSelf())
 				getContext().stop(getSelf());
 			}
@@ -45,6 +43,6 @@ class ActorLevel1 extends UntypedActor {
 				routerActor.tell(new Message_AL1_to_AL2(i, data.get(i), message.functionToApply, message.parameters), getSelf());
 			}
 		}
-		println "${this} - Done Processing Message ${message}"
+//		println "${this} - Done Processing Message ${message}"
 	}
 }
