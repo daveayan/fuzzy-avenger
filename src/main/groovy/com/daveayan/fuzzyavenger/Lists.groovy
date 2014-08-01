@@ -12,30 +12,41 @@ class Lists {
 		return l
 	}
 	
-	public <F,T> List<T> apply(List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfWorkers) {
-		ep.run(data, parameters, function, numberOfWorkers)
-		return []
+	public <F,T> List<T> apply(List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfWorkers, int numberOfSecondsTimeout) {
+		def results = ep.run(data, parameters, function, numberOfWorkers, numberOfSecondsTimeout)
+		return results
 	}
 	
-	public static <F,T> List<T> apply(ExecutionProvider ep, List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfWorkers) {
+	public static <F,T> List<T> apply(ExecutionProvider ep, List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfWorkers, int numberOfSecondsTimeout) {
 		ep.initialize()
 		Lists l = Lists.initialize(ep)
-		l.apply(data, parameters, function, numberOfWorkers)
-		Thread.sleep(20*1000)
+		def results = l.apply(data, parameters, function, numberOfWorkers, numberOfSecondsTimeout)
 		l.shutdown()
-		return []
+		return results
 	}
 	
 	public static <F,T> List<T> applyNWorkers(List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfWorkers) {
-		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, numberOfWorkers)
+		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, numberOfWorkers, 60)
 	}
 	
 	public static <F,T> List<T> applySizeOfDataSetWorkers(List<F> data, List<Object> parameters, Function<? super F,? extends T> function) {
-		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, data.size())
+		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, data.size(), 60)
 	}
 	
 	public static <F,T> List<T> applyOneWorker(List<F> data, List<Object> parameters, Function<? super F,? extends T> function) {
-		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, 1)
+		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, 1, 60)
+	}
+	
+	public static <F,T> List<T> applyNWorkers(List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfWorkers, int numberOfSecondsTimeout) {
+		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, numberOfWorkers, numberOfSecondsTimeout)
+	}
+	
+	public static <F,T> List<T> applySizeOfDataSetWorkers(List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfSecondsTimeout) {
+		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, data.size(), numberOfSecondsTimeout)
+	}
+	
+	public static <F,T> List<T> applyOneWorker(List<F> data, List<Object> parameters, Function<? super F,? extends T> function, int numberOfSecondsTimeout) {
+		return Lists.apply(AkkaExecutionProvider.newInstance(), data, parameters, function, 1, numberOfSecondsTimeout)
 	}
 	
 	public void shutdown() {

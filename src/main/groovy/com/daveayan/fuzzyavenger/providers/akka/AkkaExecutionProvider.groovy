@@ -1,10 +1,15 @@
 package com.daveayan.fuzzyavenger.providers.akka
 
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.UntypedActor
 import akka.actor.UntypedActorFactory
+import akka.pattern.Patterns
+import akka.util.Timeout
 
 import com.daveayan.fuzzyavenger.ExecutionProvider
 import com.daveayan.fuzzyavenger.Function
@@ -23,7 +28,7 @@ class AkkaExecutionProvider implements ExecutionProvider {
 		shutdownCommandListener = system.actorOf(new Props(ActorLevel0_SystemShutdowner.class), "shutdownCommandListener");
 	}
 	
-	public void run(List<Object> data, List<Object> parameters, Function<?, ?> functionToApply, int numberOfWorkers) {
+	public List<Object> run(List<Object> data, List<Object> parameters, Function<?, ?> functionToApply, int numberOfWorkers, int numberOfSecondsTimeout) {
 		ActorRef actorLevel1 = system.actorOf(new Props(new UntypedActorFactory() {
 			private static final long serialVersionUID = 1L;
 			public UntypedActor create() {
@@ -31,8 +36,13 @@ class AkkaExecutionProvider implements ExecutionProvider {
 			}
 		}), "ActorLevel1-" + System.currentTimeMillis());
 		
-		actorLevel1.tell(new Message_Runner_to_AL1(parameters, functionToApply), ActorRef.noSender());	
+		Timeout timeout = new Timeout(Duration.create(numberOfSecondsTimeout, "seconds"));
+		Future<Object> future = Patterns.ask(actorLevel1, new Message_Runner_to_AL1(parameters, functionToApply), timeout)
+		List<Object> results = (List<Object>) Await.result(future, timeout.duration());
+		
+//		actorLevel1.tell(new Message_Runner_to_AL1(parameters, functionToApply), ActorRef.noSender());	
 		System.out.println("${this} - OUT OF HERE");
+		return results
 	}
 	
 	public void shutdown() {
