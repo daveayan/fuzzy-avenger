@@ -59,6 +59,30 @@ public class AkkaExecutionProviderTest {
 		
 		l.shutdown()
 	}
+	
+	@Test public void using_static_methods_NWorkers() {
+		results = Lists.applyNWorkers(["1", "2", "3"], [], new LongRunningFunction(), 2)
+		assert results == ["1%", "2%", "3%"]
+		
+		results = Lists.applyNWorkers(["A", "B", "C"], [], new LongRunningFunction(), 2)
+		assert results == ["A%", "B%", "C%"]
+	}
+	
+	@Test public void using_static_methods_OneWorker() {
+		results = Lists.applyOneWorker(["1", "2", "3"], [], new LongRunningFunction())
+		assert results == ["1%", "2%", "3%"]
+		
+		results = Lists.applyOneWorker(["A", "B", "C"], [], new LongRunningFunction(), 2)
+		assert results == ["A%", "B%", "C%"]
+	}
+	
+	@Test public void using_static_methods_SizeOfWorkers() {
+		results = Lists.applySizeOfDataSetWorkers(["1", "2", "3"], [], new LongRunningFunction())
+		assert results == ["1%", "2%", "3%"]
+		
+		results = Lists.applySizeOfDataSetWorkers(["A", "B", "C"], [], new LongRunningFunction(), 2)
+		assert results == ["A%", "B%", "C%"]
+	}
 }
 
 class LongRunningFunction implements Function {
