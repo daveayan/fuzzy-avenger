@@ -1,8 +1,7 @@
 package com.daveayan.fuzzyavenger.providers.akka;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.collections.ListUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -21,7 +20,13 @@ public class ActorLevel1 extends UntypedActor {
 	public ActorLevel1(List<Object> data, int nrOfWorkers) {
 		this.data = data;
 		this.nrOfWorkers = nrOfWorkers;
-		this.newValues = ListUtils.fixedSizeList(data);
+		System.out.println("SIZE OF LIST = " + data.size());
+		this.newValues = new ArrayList();
+		System.out.println("SIZE OF LIST = " + data.size());
+		for(int i = 0; i < data.size() ; i++) {
+			newValues.add(new Object());
+		}
+		System.out.println("SIZE OF NEW LIST = " + newValues.size());
 		routerActor = this.getContext().actorOf(
 			new Props(ActorLevel2.class)
 			.withRouter(new RoundRobinRouter(nrOfWorkers)), "roundRobinRouterActor");

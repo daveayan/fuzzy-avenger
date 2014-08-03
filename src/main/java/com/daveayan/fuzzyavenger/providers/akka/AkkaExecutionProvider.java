@@ -16,6 +16,7 @@ import akka.util.Timeout;
 
 import com.daveayan.fuzzyavenger.ExecutionProvider;
 import com.daveayan.fuzzyavenger.Function;
+import com.google.common.collect.ImmutableList;
 
 @SuppressWarnings("deprecation")
 public class AkkaExecutionProvider implements ExecutionProvider {
@@ -35,10 +36,11 @@ public class AkkaExecutionProvider implements ExecutionProvider {
 	
 	@SuppressWarnings({ "unchecked" })
 	public List<Object> run(final List<Object> data, List<Object> parameters, Function<?, ?> functionToApply, final int numberOfWorkers, int numberOfSecondsTimeout) {
+		final ImmutableList iData = ImmutableList.builder().addAll(data).build();
 		ActorRef actorLevel1 = system.actorOf(new Props(new UntypedActorFactory() {
 			private static final long serialVersionUID = 1L;
 			public UntypedActor create() {
-				return new ActorLevel1(data, numberOfWorkers);
+				return new ActorLevel1(iData, numberOfWorkers);
 			}
 		}), "ActorLevel1-" + System.currentTimeMillis());
 		
