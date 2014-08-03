@@ -1,6 +1,8 @@
 fuzzy-avenger
 =============
 
+[![Build Status](https://travis-ci.org/daveayan/fuzzy-avenger.svg?branch=master)](https://travis-ci.org/daveayan/fuzzy-avenger)
+
 ## How to use this?
 The best examples can be found in this [unit test](https://github.com/daveayan/fuzzy-avenger/blob/master/src/test/groovy/com/daveayan/fuzzyavenger/AkkaExecutionProviderTest.groovy)
 
